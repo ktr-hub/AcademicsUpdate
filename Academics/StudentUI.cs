@@ -1,95 +1,68 @@
-﻿
+﻿using LogicLayer;
 using System;
 using System.Data;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Academics
 {
     public partial class StudentUI : Form
     {
+        DTO dto;
+        int _selectedRollGrid;
+        string _selectedNameGrid;
         public StudentUI()
         {
             InitializeComponent();
         }
         private void StudentUI_Load(object sender, EventArgs e)
         {
-            DataTable data = Student.Select();
+            dto = new DTO();
+            DataTable data = dto.GetStudentDatatable();
             dataGridStudent.DataSource = data;
             dataGridStudent.Columns[0].Visible = false;
+            dataGridStudent.ClearSelection();
         }
-
         private void dataGridStudent_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = dataGridStudent.Rows[e.RowIndex];
-                textRoll.Text = row.Cells[1].Value.ToString();
-                textName.Text = row.Cells[2].Value.ToString();
+                _selectedRollGrid = Convert.ToInt32(row.Cells[1].Value);
+                _selectedNameGrid = row.Cells[2].Value.ToString();
             }
         }
-
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            try
-            {
-                Student student = new Student();
-                bool isName = InputValidation.validateString(textName.Text);
-                student.Name = textName.Text;
-                student.RollNo = Convert.ToInt32(textRoll.Text);
-                if (isName && student.Insert())
-                {
-                    MessageBox.Show("Student inserted successfully");
-                    StudentUI_Load(sender, e);
-                }
-                else
-                {
-                    MessageBox.Show("Not inserted");
-                }
-            }
-            catch(FormatException)
-            {
-                MessageBox.Show("Enter Roll No in integers");
-            }
-            finally
-            {
-                clearAllFields();
-            }
+            StudentClickUI student = new StudentClickUI();
+            student.popUpAdd();
+            student.ShowDialog(); 
+            DataTable data = dto.GetStudentDatatable();
+            dataGridStudent.DataSource = data;
+            dataGridStudent.ClearSelection();
         }
+        private void btnGoToHome_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            dataGridStudent.DataSource = dto.callSearch(txtSearch.Text);
+        }
+
         private void btnUpdate_Click(object sender, EventArgs e)
         {
-            try
+            if (_selectedRollGrid != 0)
             {
-                Student student = new Student();
-                bool isName = InputValidation.validateString(textName.Text);
-                student.Name = textName.Text;
-                student.RollNo = Convert.ToInt32(textRoll.Text);
-                student.StudentID = Student.rollToId[student.RollNo];
-                if (isName && student.Update())
-                {
-                    MessageBox.Show("Student updated successfully");
-                    StudentUI_Load(sender, e);
-                }
-                else if (isName == false)
-                {
-                    MessageBox.Show("Enter correct text");
-                }
-                else
-                {
-                    MessageBox.Show("Not updated");
-                }
+                StudentClickUI student = new StudentClickUI();
+                student.popUpUpdate(_selectedRollGrid, _selectedNameGrid);
+                student.ShowDialog(); 
+                DataTable data = dto.GetStudentDatatable();
+                dataGridStudent.DataSource = data;
+                dataGridStudent.ClearSelection();
             }
-            catch (FormatException)
+            else
             {
-                MessageBox.Show("Enter correct inputs");
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Roll No not found to update");
-            }
-            finally
-            {
-                clearAllFields();
+                MessageBox.Show("Please click on index cell to update");
             }
         }
 
@@ -97,51 +70,32 @@ namespace Academics
         {
             try
             {
-                bool isName = InputValidation.validateString(textName.Text);
-                Student student = new Student();
-                student.Name = textName.Text;
-                student.RollNo = Convert.ToInt32(textRoll.Text);
-                student.StudentID = Student.rollToId[student.RollNo];
-                if (isName && student.Delete())
+                if (_selectedRollGrid != 0)
                 {
-                    MessageBox.Show("Student deleted successfully");
-                    StudentUI_Load(sender, e);
+                    if (
+                    MessageBox.Show("Are you sure to delete this record?",
+                                    "Marks Details",
+                                    MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        dto = new DTO();
+                        dto.Name = _selectedNameGrid;
+                        dto.RollNo = _selectedRollGrid;
+                        dto.DeleteStudent(out string _status);
+                        MessageBox.Show(_status); 
+                        DataTable data = dto.GetStudentDatatable();
+                        dataGridStudent.DataSource = data;
+                        dataGridStudent.ClearSelection();
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Not deleted");
+                    MessageBox.Show("Please click on index cell to delete");
                 }
-            }
-            catch (FormatException)
-            {
-                MessageBox.Show("Enter correct input");
             }
             catch (Exception)
             {
-                MessageBox.Show("Roll No not found to delete");
+                MessageBox.Show("Error occurred");
             }
-            finally
-            {
-                clearAllFields();
-            }
-        }
-
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            clearAllFields();
-        }
-
-        public void clearAllFields()
-        {
-            textName.Text = null;
-            textRoll.Text = null;
-        }
-
-        private void btnGoToMarks_Click(object sender, EventArgs e)
-        {
-            this.Hide();
-            MarksUI marksUI = new MarksUI();
-            marksUI.ShowDialog();
         }
     }
 }

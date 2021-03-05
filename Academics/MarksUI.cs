@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LogicLayer;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,6 +13,12 @@ namespace Academics
 {
     public partial class MarksUI : Form
     {
+        int _selectedRollNo;
+        string _selectedSubject;
+        string _selectedSemester;
+        int _enteredMarksScored;
+        int _selectedMarksID;
+        DTO dto;
         public MarksUI()
         {
             InitializeComponent();
@@ -19,112 +26,53 @@ namespace Academics
 
         private void MarksUI_Load(object sender, EventArgs e)
         {
-            updateComboBoxes();
-            DataTable marksDataTable = Marks.Select();
-            dataGridMarks.DataSource = marksDataTable;
+            dto = new DTO();
+            DataTable data = dto.GetMarksDatatable();
+            dataGridMarks.DataSource = data;
             dataGridMarks.Columns[0].Visible = false;
-            dataGridMarks.Columns[2].Visible = false;
             dataGridMarks.Columns[4].Visible = false;
             dataGridMarks.Columns[5].Visible = false;
             dataGridMarks.Columns[7].Visible = false;
+            dataGridMarks.ClearSelection();
+            dataGridMarks.CurrentCell = null;
         }
-
-        public void updateComboBoxes()
-        {
-
-            cbRoll.DataSource = new BindingSource(Student.rollToId, null);
-            cbRoll.DisplayMember = "Key";
-            cbRoll.ValueMember = "Value";
-
-            Subject.Select();
-            cbSubject.DataSource = new BindingSource(Subject.subjectNameToID, null); 
-            cbSubject.DisplayMember = "Key";
-            cbSubject.ValueMember = "Value";
-
-            Semester.Select();
-            cbSemester.DataSource = new BindingSource(Semester.semesterToId, null);
-            cbSemester.DisplayMember = "Key";
-            cbSemester.ValueMember = "Value";
-
-            clearAllFields();
-        }
-
         private void dataGridMarks_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = dataGridMarks.Rows[e.RowIndex];
-                txtMarks.Text = row.Cells[8].Value.ToString();
-                cbRoll.Text = row.Cells[1].Value.ToString();
-                cbSemester.Text = row.Cells[3].Value.ToString();
-                cbSubject.Text = row.Cells[6].Value.ToString();
+                _selectedMarksID = Convert.ToInt32(row.Cells[7].Value);
+                _selectedRollNo = Convert.ToInt32(row.Cells[1].Value);
+                _selectedSubject = row.Cells[6].Value.ToString();
+                _selectedSemester = row.Cells[3].Value.ToString();
+                _enteredMarksScored = Convert.ToInt32(row.Cells[8].Value);
             }
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            try
-            {
-                Marks marksObj = new Marks();
-                marksObj.student.StudentID = Convert.ToInt32(cbRoll.SelectedValue);
-                marksObj.subject.subjectID = Convert.ToInt32(cbSubject.SelectedValue);
-                marksObj.semester.semesterID = Convert.ToInt32(cbSemester.SelectedValue);
-                marksObj.marks = Convert.ToInt32(txtMarks.Text);
-
-                if (marksObj.Insert())
-                {
-                    MessageBox.Show("Marks entered successfully");
-                    MarksUI_Load(sender,e);
-                }
-            }
-            finally
-            {
-                clearAllFields();
-            }
+            MarksUIClick click = new MarksUIClick();
+            click.popUpAdd();
+            click.ShowDialog();
+            DataTable data = dto.GetMarksDatatable();
+            dataGridMarks.DataSource = data;
+            dataGridMarks.ClearSelection();
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
         {
-            try
+            if (_selectedMarksID != 0)
             {
-                Marks marksObj = new Marks();
-                marksObj.marks = Convert.ToInt32(txtMarks.Text);
-                marksObj.MarksID = 0;
-                MessageBox.Show( cbRoll.SelectedValue + " " + cbSubject.SelectedValue + " " + cbSemester.SelectedValue);
-                foreach (DataGridViewRow row in dataGridMarks.Rows)
-                {
-                    int id1 = Convert.ToInt32(row.Cells["StudentID"].Value);
-                    int id2 = Convert.ToInt32(row.Cells["SubjectID"].Value);
-                    int id3 = Convert.ToInt32(row.Cells["SemesterID"].Value);
-                    if(id1==Convert.ToInt32(cbRoll.SelectedValue)&&
-                        id2== Convert.ToInt32(cbSubject.SelectedValue) &&
-                        id3 == Convert.ToInt32(cbSemester.SelectedValue))
-                    {
-                        marksObj.MarksID = Convert.ToInt32(row.Cells["MarksId"].Value);
-                    }
-                }
-
-                if (marksObj.MarksID != 0 && marksObj.Update())
-                {
-                    MarksUI_Load(sender, e);
-                    MessageBox.Show("Updated");
-                }
-                else if (marksObj.MarksID == 0)
-                {
-                    MessageBox.Show("Data Not found to update. First click add to update later");
-                }
-                else
-                {
-                    MessageBox.Show("Not updated");
-                }
+                MarksUIClick click = new MarksUIClick();
+                click.popUpUpdate(_enteredMarksScored, _selectedSemester, _selectedSubject, _selectedRollNo, _selectedMarksID);
+                click.ShowDialog(); 
+                DataTable data = dto.GetMarksDatatable();
+                dataGridMarks.DataSource = data;
+                dataGridMarks.ClearSelection();
             }
-            catch (Exception exception)
+            else
             {
-                MessageBox.Show("Enter correct input " + exception.Message);
-            }
-            finally
-            {
-                clearAllFields();
+                MessageBox.Show("Please click any cell to update");
             }
         }
 
@@ -132,67 +80,45 @@ namespace Academics
         {
             try
             {
-                Marks marksObj = new Marks();
-                marksObj.MarksID = 0;
-                foreach (DataGridViewRow row in dataGridMarks.Rows)
+                if (_selectedMarksID != 0)
                 {
-                    int id1 = Convert.ToInt32(row.Cells["StudentID"].Value);
-                    int id2 = Convert.ToInt32(row.Cells["SubjectID"].Value);
-                    int id3 = Convert.ToInt32(row.Cells["SemesterID"].Value);
-                    if (id1 == Convert.ToInt32(cbRoll.SelectedValue) &&
-                        id2 == Convert.ToInt32(cbSubject.SelectedValue) &&
-                        id3 == Convert.ToInt32(cbSemester.SelectedValue))
+                    if (
+                    MessageBox.Show("Are you sure to delete this record?",
+                                    "Marks Details",
+                                    MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        marksObj.MarksID = Convert.ToInt32(row.Cells["MarksId"].Value);
+                        dto = new DTO();
+                        dto.RollNo = _selectedRollNo;
+                        dto.subjectName = _selectedSubject;
+                        dto.SemesterDescription =  _selectedSemester;
+                        dto.MarksScored = _enteredMarksScored;
+                        dto.MarksID = _selectedMarksID;
+                        dto.DeleteMarks(out string _status);
+                        MessageBox.Show(_status); 
+                        DataTable data = dto.GetMarksDatatable();
+                        dataGridMarks.DataSource = data;
+                        dataGridMarks.ClearSelection();
                     }
-                }
-                if (marksObj.MarksID != 0 && marksObj.Delete())
-                {
-                    MarksUI_Load(sender, e);
-                    MessageBox.Show("Updated");
-                }
-                else if (marksObj.MarksID == 0)
-                {
-                    MessageBox.Show("Data Not found to delete");
                 }
                 else
                 {
-                    MessageBox.Show("Not deleted");
+                    MessageBox.Show("Please click any cell to delete");
                 }
             }
             catch (Exception exception)
             {
                 MessageBox.Show("Enter correct input " + exception.Message);
             }
-            finally
-            {
-                clearAllFields();
-            }
-        }
-
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            clearAllFields();
-        }
-
-        public void clearAllFields()
-        {
-            txtMarks.Text = null;
-            cbRoll.Text = null;
-            cbSemester.Text = null;
-            cbSubject.Text = null;
         }
 
         private void btnGoToStudent_Click(object sender, EventArgs e)
         {
-            this.Hide();
-            StudentUI studentUI = new StudentUI();
-            studentUI.ShowDialog();
+            Close();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void txtSearch_TextChanged(object sender, EventArgs e)
         {
-
+            dataGridMarks.DataSource = dto.callSearchMarks(txtSearch.Text);
         }
     }
 }

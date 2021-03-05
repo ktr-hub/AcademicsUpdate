@@ -1,45 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Configuration;
-using System.Threading.Tasks;
+﻿using EntityLayer;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace Academics
+namespace DAL
 {
-    public class Student
+    public class StudentDAL
     {
-        // Data of a student
-        public int StudentID { get; set; }
-        public int RollNo { get; set; }
-        public String Name { get; set; }
-
-        public static Dictionary<int, int> rollToId;
-
-        // ADO operations on Student table
-        public static string myConnStrng = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
-        
-        public static DataTable Select()
+        public static string myConnStrng = @"Data Source = (LocalDb)\ktr;Initial Catalog = Academics; Integrated Security = True";
+        public DataTable Select()
         {
             SqlConnection connection = new SqlConnection(myConnStrng);
             DataTable dt = new DataTable();
-            SqlDataReader reader = null;
-            rollToId = new Dictionary<int, int>();
             try
             {
-                string sql = "select * from student";
+                string sql = "select * from student order by rollNo";
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlDataAdapter adapter = new SqlDataAdapter(command);
                 connection.Open();
-                adapter.Fill(dt); 
-                reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    rollToId[reader.GetInt32(1)]= reader.GetInt32(0);
-                }
+                adapter.Fill(dt);
             }
             catch (Exception exception)
             {
@@ -47,98 +27,111 @@ namespace Academics
             }
             finally
             {
-                reader.Close();
                 connection.Close();
             }
             return dt;
         }
-        public bool Insert()
+        public DataTable Select(string keyword)
         {
-            bool isSuccess = false;
-
             SqlConnection connection = new SqlConnection(myConnStrng);
+            DataTable dt = new DataTable();
+            try
+            {
+                string sql = "select * from Student where Name like '%" + keyword + "%' or RollNo like '%" + keyword + "%' ";
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                connection.Open();
+                adapter.Fill(dt);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return dt;
+        }
+        public void Insert(Student student,out string _status)
+        {
+            SqlConnection connection = new SqlConnection(myConnStrng);
+            _status = null;
             try
             {
                 string sql = "insert into Student(RollNo,Name) values(@RollNo,@Name)";
                 SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Name", this.Name);
-                command.Parameters.AddWithValue("@RollNo", this.RollNo);
-
+                command.Parameters.AddWithValue("@Name", student.Name);
+                command.Parameters.AddWithValue("@RollNo", student.RollNo);
                 connection.Open();
                 int rows = command.ExecuteNonQuery();
                 if (rows > 0)
                 {
-                    isSuccess = true;
+                    _status = "Successfully inserted";
                 }
             }
             catch (SqlException exception)
             {
                 if (exception.Number == 2627) // Unique key violation
-                    MessageBox.Show("Roll No. Already assigned");
+                    _status = "Roll No. Already assigned";
                 else
-                    MessageBox.Show("Sql Constraint error");
+                    _status = "Error occurred";
             }
             finally
             {
                 connection.Close();
             }
-            return isSuccess;
         }
-
-        public bool Update()
+        public void Update(Student student, out string _status)
         {
-            bool isSuccess = false;
             SqlConnection connection = new SqlConnection(myConnStrng);
+            _status = null;
             try
             {
                 string sql = "update Student set Name = @Name where StudentId=@Id";
                 SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Name", this.Name);
-                command.Parameters.AddWithValue("@Id", this.StudentID);
+                command.Parameters.AddWithValue("@Name", student.Name);
+                command.Parameters.AddWithValue("@Id", student.StudentID);
                 connection.Open();
                 int rows = command.ExecuteNonQuery();
                 if (rows > 0)
                 {
-                    isSuccess = true;
+                    _status = "Successfully Updated";
                 }
             }
             catch (SqlException exception)
             {
-                MessageBox.Show(exception.Message);
+                _status = exception.Message;
             }
             finally
             {
                 connection.Close();
             }
-            return isSuccess;
         }
-
-        public bool Delete()
+        public void Delete(Student student,out string _status)
         {
-            bool isSuccess = false;
             SqlConnection connection = new SqlConnection(myConnStrng);
+            _status = null;
             try
             {
-                string sql = "delete from Student where RollNo = @Roll and Name=@name";
+                string sql = "delete from Student where StudentId=@Id";
                 SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Roll", this.RollNo);
-                command.Parameters.AddWithValue("@name", this.Name);
+                command.Parameters.AddWithValue("@Id", student.StudentID);
                 connection.Open();
                 int rows = command.ExecuteNonQuery();
                 if (rows > 0)
                 {
-                    isSuccess = true;
+                    _status = "Deleted successfully";
                 }
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                _status = exception.Message;
             }
             finally
             {
                 connection.Close();
             }
-            return isSuccess;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Academics
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new StudentUI());
+            Application.Run(new Home());
         }
     }
 }
