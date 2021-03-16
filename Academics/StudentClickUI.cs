@@ -13,7 +13,8 @@ namespace Academics
 {
     public partial class StudentClickUI : Form
     {
-        DTO dto;
+        DTO dto = new DTO();
+        LocalHostReference.Service1Client lhr = new LocalHostReference.Service1Client();
         public StudentClickUI()
         {
             InitializeComponent();
@@ -27,22 +28,22 @@ namespace Academics
             btnUpdate.Visible = false;
             btnAdd.Visible = true;
         }
-        public void popUpUpdate(int rollNo,string name)
+        public void popUpUpdate(int rollNo,string name, int studentId)
         {
             btnUpdate.Visible = true;
             btnAdd.Visible = false;
             textRoll.ReadOnly = true;
             textRoll.Text = rollNo.ToString();
             textName.Text = name;
+            dto.StudentID = studentId;
         }
         private void btnAdd_Click(object sender, EventArgs e)
         {
             try
             {
-                dto = new DTO();
                 dto.Name = textName.Text;
                 dto.RollNo = Convert.ToInt32(textRoll.Text);
-                dto.InsertStudent(out string _status);
+                string _status = lhr.InsertStudent(dto);
                 MessageBox.Show(_status);
                 if(MessageBox.Show("Add Again?","Add Students",MessageBoxButtons.YesNo)==DialogResult.No)
                 {
@@ -64,10 +65,9 @@ namespace Academics
         {
             try
             {
-                dto = new DTO();
                 dto.Name = textName.Text;
                 dto.RollNo = Convert.ToInt32(textRoll.Text);
-                dto.UpdateStudent(out string _status);
+                string _status = lhr.UpdateStudent(dto);
                 MessageBox.Show(_status);
                 Close();
             }

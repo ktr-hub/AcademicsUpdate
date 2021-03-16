@@ -1,25 +1,28 @@
-﻿using EntityLayer;
+﻿using DAL.NHibernateClasses;
+using EntityLayer;
+using NHibernate;
 using System;
+using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace DAL
 {
     public class StudentDAL
     {
-        public static string myConnStrng = @"Data Source = (LocalDb)\ktr;Initial Catalog = Academics; Integrated Security = True";
-        public DataTable Select()
+        public List<Student> Select()
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
-            DataTable dt = new DataTable();
+            ISession session = NHibernateSession.OpenSession();
+            List<Student> studentList = new List<Student>();
             try
             {
-                string sql = "select * from student order by rollNo";
-                SqlCommand command = new SqlCommand(sql, connection);
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                connection.Open();
-                adapter.Fill(dt);
+                using (ITransaction tx = session.BeginTransaction())
+                {
+                    studentList = session.QueryOver<Student>().OrderBy(x => x.RollNo).Asc.List<Student>().ToList();
+                }
             }
             catch (Exception exception)
             {
@@ -27,21 +30,20 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
-            return dt;
+            return studentList;
         }
-        public DataTable Select(string keyword)
+        public List<Student> Select(string keyword)
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
-            DataTable dt = new DataTable();
+            ISession session = NHibernateSession.OpenSession();
+            List<Student> students = new List<Student>();
             try
             {
-                string sql = "select * from Student where Name like '%" + keyword + "%' or RollNo like '%" + keyword + "%' ";
-                SqlCommand command = new SqlCommand(sql, connection);
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                connection.Open();
-                adapter.Fill(dt);
+                using (ITransaction tx = session.BeginTransaction())
+                {
+                    students = session.CreateQuery("select c  from Student c where c.Name like '%" + keyword + "%' or c.RollNo like '%" + keyword + "%'").List<Student>().ToList();
+                }
             }
             catch (Exception exception)
             {
@@ -49,25 +51,24 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
-            return dt;
+            return students;
         }
         public void Insert(Student student,out string _status)
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
             _status = null;
+            ISession session = NHibernateSession.OpenSession();
             try
             {
-                string sql = "insert into Student(RollNo,Name) values(@RollNo,@Name)";
-                SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Name", student.Name);
-                command.Parameters.AddWithValue("@RollNo", student.RollNo);
-                connection.Open();
-                int rows = command.ExecuteNonQuery();
-                if (rows > 0)
+                using (ITransaction tx = session.BeginTransaction())
                 {
-                    _status = "Successfully inserted";
+                    session.Save(student);
+                    tx.Commit();
+                    if (tx.WasCommitted)
+                    {
+                        _status = "Successfully inserted";
+                    }
                 }
             }
             catch (SqlException exception)
@@ -79,24 +80,32 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
         }
         public void Update(Student student, out string _status)
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
             _status = null;
+            ISession session = NHibernateSession.OpenSession();
             try
             {
-                string sql = "update Student set Name = @Name where StudentId=@Id";
-                SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Name", student.Name);
-                command.Parameters.AddWithValue("@Id", student.StudentID);
-                connection.Open();
-                int rows = command.ExecuteNonQuery();
-                if (rows > 0)
+                using (ITransaction tx = session.BeginTransaction())
                 {
-                    _status = "Successfully Updated";
+                    var studentRecord = session.QueryOver<Student>().Where(x => x.StudentID == student.StudentID).List<Student>().ToList();
+                    foreach (var stud in studentRecord)
+                    {
+                        if (stud.StudentID == student.StudentID)
+                        {
+                            stud.Name = student.Name;
+                            stud.RollNo = student.RollNo;
+                            session.SaveOrUpdate(stud);
+                            tx.Commit();
+                            if (tx.WasCommitted)
+                            {
+                                _status = "Successfully Updated";
+                            }
+                        }
+                    }
                 }
             }
             catch (SqlException exception)
@@ -105,23 +114,24 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
         }
         public void Delete(Student student,out string _status)
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
             _status = null;
+            ISession session = NHibernateSession.OpenSession();
             try
             {
-                string sql = "delete from Student where StudentId=@Id";
-                SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@Id", student.StudentID);
-                connection.Open();
-                int rows = command.ExecuteNonQuery();
-                if (rows > 0)
+                using (ITransaction tx = session.BeginTransaction())
                 {
-                    _status = "Deleted successfully";
+                    var marksRecord = session.QueryOver<Student>().Where(x => x.StudentID == student.StudentID).SingleOrDefault();
+                    session.Delete(marksRecord);
+                    tx.Commit();
+                    if (tx.WasCommitted)
+                    {
+                        _status = "Successfully Deleted";
+                    }
                 }
             }
             catch (Exception exception)
@@ -130,7 +140,7 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
         }
     }

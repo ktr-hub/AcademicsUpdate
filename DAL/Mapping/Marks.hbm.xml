@@ -1,0 +1,31 @@
+﻿<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true" assembly="EntityLayer" namespace="EntityLayer">
+	<class name="EntityLayer.Marks" table="MarksDetails" dynamic-update="true" >
+		<cache usage="read-write"/>
+		<id name="MarksID" column="marksId" type="int">
+			<generator class="native" />
+		</id>
+		<property name="MarksScored" column="Marks" type="int" />
+		<many-to-one name="student"
+		   class="EntityLayer.Student"
+		  column="StudentID"
+		  cascade="none"
+		  fetch="select"
+		  access="property"
+		  not-found="exception"
+		  lazy="proxy" />
+		<many-to-one name="semester" class="EntityLayer.Semester"
+			   column="SemesterID"
+			   cascade="none"
+			  fetch="select"
+			  access="property"
+			  not-found="exception"
+			  lazy="proxy" />
+		<many-to-one name="subject" class="EntityLayer.Subject"
+				  column="SubjectID"
+			  cascade="none"
+			  fetch="select"
+			  access="property"
+			  not-found="exception"
+			  lazy="proxy" />
+	</class>
+</hibernate-mapping>

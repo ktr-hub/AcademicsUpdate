@@ -1,5 +1,6 @@
 ﻿using LogicLayer;
 using System;
+using System.ComponentModel;
 using System.Data;
 using System.Windows.Forms;
 
@@ -8,6 +9,8 @@ namespace Academics
     public partial class StudentUI : Form
     {
         DTO dto;
+        LocalHostReference.Service1Client lhr = new LocalHostReference.Service1Client();
+        int _selectedStudentId;        
         int _selectedRollGrid;
         string _selectedNameGrid;
         public StudentUI()
@@ -16,29 +19,36 @@ namespace Academics
         }
         private void StudentUI_Load(object sender, EventArgs e)
         {
-            dto = new DTO();
-            DataTable data = dto.GetStudentDatatable();
-            dataGridStudent.DataSource = data;
+            var bindingList = new BindingList<DTO>(lhr.GetStudentDatatable());
+            dataGridStudent.DataSource = new BindingSource(bindingList, null);
             dataGridStudent.Columns[0].Visible = false;
-            dataGridStudent.ClearSelection();
+            dataGridStudent.Columns[1].Visible = false;
+            dataGridStudent.Columns[2].Visible = false;
+            dataGridStudent.Columns[3].Visible = false;
+            dataGridStudent.Columns[4].Visible = false;
+            dataGridStudent.Columns[5].Visible = false;
+            dataGridStudent.Columns[6].Visible = false;
         }
         private void dataGridStudent_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = dataGridStudent.Rows[e.RowIndex];
-                _selectedRollGrid = Convert.ToInt32(row.Cells[1].Value);
-                _selectedNameGrid = row.Cells[2].Value.ToString();
+                _selectedRollGrid = Convert.ToInt32(row.Cells[7].Value);
+                _selectedNameGrid = row.Cells[8].Value.ToString();
+                _selectedStudentId = Convert.ToInt32(row.Cells[6].Value);
             }
         }
         private void btnAdd_Click(object sender, EventArgs e)
         {
             StudentClickUI student = new StudentClickUI();
             student.popUpAdd();
-            student.ShowDialog(); 
-            DataTable data = dto.GetStudentDatatable();
-            dataGridStudent.DataSource = data;
+            student.ShowDialog();
+            dataGridStudent.DataSource = new BindingSource(lhr.GetStudentDatatable(), null);
             dataGridStudent.ClearSelection();
+            _selectedRollGrid = 0;
+            _selectedNameGrid = null;
+            _selectedStudentId = 0;
         }
         private void btnGoToHome_Click(object sender, EventArgs e)
         {
@@ -46,7 +56,7 @@ namespace Academics
         }
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
-            dataGridStudent.DataSource = dto.callSearch(txtSearch.Text);
+            dataGridStudent.DataSource = lhr.callSearch(txtSearch.Text);
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
@@ -54,11 +64,13 @@ namespace Academics
             if (_selectedRollGrid != 0)
             {
                 StudentClickUI student = new StudentClickUI();
-                student.popUpUpdate(_selectedRollGrid, _selectedNameGrid);
-                student.ShowDialog(); 
-                DataTable data = dto.GetStudentDatatable();
-                dataGridStudent.DataSource = data;
+                student.popUpUpdate(_selectedRollGrid, _selectedNameGrid, _selectedStudentId);
+                student.ShowDialog();
+                dataGridStudent.DataSource = new BindingSource(lhr.GetStudentDatatable(), null);
                 dataGridStudent.ClearSelection();
+                _selectedRollGrid = 0;
+                _selectedNameGrid = null;
+                _selectedStudentId = 0;
             }
             else
             {
@@ -80,11 +92,14 @@ namespace Academics
                         dto = new DTO();
                         dto.Name = _selectedNameGrid;
                         dto.RollNo = _selectedRollGrid;
-                        dto.DeleteStudent(out string _status);
-                        MessageBox.Show(_status); 
-                        DataTable data = dto.GetStudentDatatable();
-                        dataGridStudent.DataSource = data;
+                        dto.StudentID = _selectedStudentId;
+                        string _status = lhr.DeleteStudent(dto);
+                        MessageBox.Show(_status);
+                        dataGridStudent.DataSource = new BindingSource(lhr.GetStudentDatatable(), null);
                         dataGridStudent.ClearSelection();
+                        _selectedRollGrid = 0;
+                        _selectedNameGrid = null;
+                        _selectedStudentId = 0;
                     }
                 }
                 else

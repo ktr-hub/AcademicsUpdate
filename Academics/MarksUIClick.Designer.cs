@@ -40,6 +40,8 @@ namespace Academics
             this.btnBack = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
             this.cbRoll = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.cbName = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // txtMarks
@@ -142,12 +144,34 @@ namespace Academics
             this.cbRoll.Name = "cbRoll";
             this.cbRoll.Size = new System.Drawing.Size(121, 28);
             this.cbRoll.TabIndex = 20;
+            this.cbRoll.SelectedIndexChanged += new System.EventHandler(this.cbRoll_SelectedIndexChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.label1.Location = new System.Drawing.Point(668, 113);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(80, 25);
+            this.label1.TabIndex = 22;
+            this.label1.Text = "Student";
+            // 
+            // cbName
+            // 
+            this.cbName.FormattingEnabled = true;
+            this.cbName.Location = new System.Drawing.Point(786, 110);
+            this.cbName.Name = "cbName";
+            this.cbName.Size = new System.Drawing.Size(121, 28);
+            this.cbName.TabIndex = 23;
+            this.cbName.SelectedIndexChanged += new System.EventHandler(this.cbName_SelectedIndexChanged);
             // 
             // MarksUIClick
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1133, 465);
+            this.Controls.Add(this.cbName);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.cbRoll);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.btnBack);
@@ -161,7 +185,6 @@ namespace Academics
             this.Controls.Add(this.lblRoll);
             this.Name = "MarksUIClick";
             this.Text = "MarksUIClick";
-            this.Load += new System.EventHandler(this.MarksUIClick_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -180,5 +203,7 @@ namespace Academics
         private System.Windows.Forms.Button btnBack;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.ComboBox cbRoll;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox cbName;
     }
 }

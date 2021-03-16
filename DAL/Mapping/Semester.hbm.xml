@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true" assembly="EntityLayer" namespace="EntityLayer">
+	<class name="EntityLayer.Semester" table="Semester" dynamic-update="true" >
+		<cache usage="read-write"/>
+		<id name="SemesterID" column="SemesterID" type="int">
+			<generator class="native" />
+		</id>
+		<property name="SemesterDescription" column="SemesterDescription" type="string" />
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true" assembly="EntityLayer" namespace="EntityLayer">
+	<class name="EntityLayer.Subject" table="Subject" dynamic-update="true" >
+		<cache usage="read-write"/>
+		<id name="SubjectID" column="SubjectID" type="int">
+			<generator class="native" />
+		</id>
+		<property name="SubjectName" column="SubjectName" type="string" />
+	</class>
+</hibernate-mapping>

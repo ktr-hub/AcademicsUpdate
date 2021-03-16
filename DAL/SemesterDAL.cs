@@ -1,6 +1,9 @@
-﻿using EntityLayer;
+﻿using DAL.NHibernateClasses;
+using EntityLayer;
+using NHibernate;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -12,18 +15,16 @@ namespace DAL
 {
     public class SemesterDAL
     {
-        public static string myConnStrng = @"Data Source = (LocalDb)\ktr;Initial Catalog = Academics; Integrated Security = True";
-        public DataTable Select()
+        public List<Semester> Select()
         {
-            SqlConnection connection = new SqlConnection(myConnStrng);
-            DataTable dt = new DataTable();
+            ISession session = NHibernateSession.OpenSession();
+            List<Semester> semesters = new List<Semester>();
             try
             {
-                string sql = "select * from semester order by semesterId; ";
-                SqlCommand command = new SqlCommand(sql, connection);
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                connection.Open();
-                adapter.Fill(dt);
+                using (ITransaction tx = session.BeginTransaction())
+                {
+                    semesters = session.QueryOver<Semester>().List<Semester>().ToList();
+                }
             }
             catch (Exception exception)
             {
@@ -31,9 +32,9 @@ namespace DAL
             }
             finally
             {
-                connection.Close();
+                session.Close();
             }
-            return dt;
+            return semesters;
         }
     }
 }

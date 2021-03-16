@@ -8,12 +8,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 namespace Academics
 {
     public partial class MarksUIClick : Form
     {
         DTO dto = new DTO();
+        LocalHostReference.Service1Client lhr = new LocalHostReference.Service1Client();
         public MarksUIClick()
         {
             InitializeComponent();
@@ -24,12 +24,13 @@ namespace Academics
             btnAdd.Visible = true;
             updateComboBoxes();
         }
-        public void popUpUpdate(int marks, string semester, string subject, int rollNo,int marksId)
+        public void popUpUpdate(int marks, string semester, string subject, int rollNo,int marksId, string name)
         {
             btnUpdate.Visible = true;
             btnAdd.Visible = false;
 
             cbRoll.Text = rollNo.ToString();
+            cbName.Text = name;
             cbSubject.Text = subject;
             cbSemester.Text = semester;
             txtMarks.Text = marks.ToString();
@@ -40,18 +41,19 @@ namespace Academics
          }
         public void updateComboBoxes()
         {
-            dto.FillStudentObjects();
-            dto.FillSemesterObjects();
-            dto.FillSubjectsObjects();
-            cbRoll.DataSource = new BindingSource(dto.studentObjects, null);
+            cbRoll.DataSource = new BindingSource(lhr.GetStudentDatatable(), null);
             cbRoll.DisplayMember = "RollNo";
             cbRoll.ValueMember = "StudentID";
             cbRoll.SelectedIndex = -1;
-            cbSemester.DataSource = new BindingSource(dto.semesterObjects, null);
+            cbName.DataSource = new BindingSource(lhr.GetStudentDatatable(), null);
+            cbName.DisplayMember = "NameRollNo";
+            cbName.ValueMember = "StudentID";
+            cbName.SelectedIndex = -1;
+            cbSemester.DataSource = new BindingSource(lhr.GetSemesterDatatable(), null);
             cbSemester.DisplayMember = "SemesterDescription";
             cbSemester.ValueMember = "SemesterID";
             cbSemester.SelectedIndex = -1;
-            cbSubject.DataSource = new BindingSource(dto.subjectObjects, null);
+            cbSubject.DataSource = new BindingSource(lhr.GetSubjectsDatatable(), null);
             cbSubject.DisplayMember = "SubjectName";
             cbSubject.ValueMember = "SubjectID";
             cbSubject.SelectedIndex = -1;
@@ -64,8 +66,16 @@ namespace Academics
                 dto.SubjectID = Convert.ToInt32(cbSubject.SelectedValue);
                 dto.SemesterID = Convert.ToInt32(cbSemester.SelectedValue);
                 dto.MarksScored = Convert.ToInt32(txtMarks.Text);
-                dto.InsertMarks(out string _status);
+                string _status = lhr.InsertMarks(dto);
                 MessageBox.Show(_status);
+                if (MessageBox.Show("Add Again?", "Add marks", MessageBoxButtons.YesNo) == DialogResult.No)
+                {
+                    Close();
+                }
+                txtMarks.Clear();
+                cbRoll.SelectedIndex = -1;
+                cbSemester.SelectedIndex = -1;
+                cbSubject.SelectedIndex = -1;
             }
             catch (FormatException)
             {
@@ -84,8 +94,9 @@ namespace Academics
                 dto.SubjectID = Convert.ToInt32(cbSubject.SelectedValue);
                 dto.SemesterID = Convert.ToInt32(cbSemester.SelectedValue);
                 dto.MarksScored = Convert.ToInt32(txtMarks.Text);
-                dto.UpdateMarks(out string _status);
+                string _status = lhr.UpdateMarks(dto);
                 MessageBox.Show(_status);
+                Close();
             }
             catch (FormatException)
             {
@@ -100,9 +111,27 @@ namespace Academics
         {
             this.Close();
         }
-
-        private void MarksUIClick_Load(object sender, EventArgs e)
+        private void cbRoll_SelectedIndexChanged(object sender, EventArgs e)
         {
+            foreach(DTO item in lhr.GetStudentDatatable())
+            {
+                if (item.StudentID.Equals(cbRoll.SelectedValue))
+                {
+                    cbName.Text = item.Name+" ( " + item.RollNo.ToString() + " )";
+                    break;
+                }
+            }
+        }
+        private void cbName_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (DTO item in lhr.GetStudentDatatable())
+            {
+                if (item.StudentID.Equals(cbName.SelectedValue))
+                {
+                    cbRoll.Text = item.RollNo.ToString();
+                    break;
+                }
+            }
         }
     }
 }

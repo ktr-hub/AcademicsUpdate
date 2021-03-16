@@ -33,9 +33,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DTO, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,6 +50,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connected Services\LocalHostReference\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
     <Compile Include="Home.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -104,6 +112,18 @@
     <EmbeddedResource Include="StudentUI.resx">
       <DependentUpon>StudentUI.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="Connected Services\LocalHostReference\Service.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\LocalHostReference\Service1.wsdl" />
+    <None Include="Connected Services\LocalHostReference\Service1.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\LocalHostReference\Service2.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\DataSources\LogicLayer.DTO.datasource" />
+    <None Include="Properties\DataSources\System.Data.DataTable.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -122,14 +142,26 @@
       <Project>{2d0a6212-42d8-4f6e-85ad-5697394f919b}</Project>
       <Name>LogicLayer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\EntityLayer\EntityLayer.csproj">
-      <Project>{BAB368E2-EE87-4EAE-9932-4E64AE56DC5B}</Project>
-      <Name>EntityLayer</Name>
+    <ProjectReference Include="..\WCFLayer\WCFLayer.csproj">
+      <Project>{1a4e12b0-72ad-4596-b8cf-f6b3ea37fd50}</Project>
+      <Name>WCFLayer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Connected Services\LocalHostReference\configuration91.svcinfo" />
+    <None Include="Connected Services\LocalHostReference\configuration.svcinfo" />
+    <None Include="Connected Services\LocalHostReference\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
     <Content Include="img_backtoschool.jpg" />
     <None Include="Resources\img_backtoschool.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Connected Services\LocalHostReference\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
